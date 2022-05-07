@@ -88,6 +88,19 @@ def scraper(filename, page):
 
 
 def insert():
+    with open("SQL_scripts/tour.sql", mode='a', encoding="utf8") as f:
+        f.write('INSERT INTO "tour" ("hotel_name", "region", "own_transport", "board_types") VALUES\n')
+
+    with open("SQL_scripts/flight.sql", mode='a', encoding="utf8") as f:
+        f.write(
+            'INSERT INTO "flight" ("flight_date", "departure_destination", "arrival_destination", "number_of_seats") VALUES\n')
+
+    with open("SQL_scripts/room.sql", mode='a', encoding="utf8") as f:
+        f.write('INSERT INTO "room" ("hotel_name", "room_type") VALUES\n')
+
+    with open("SQL_scripts/room_availability.sql", mode='a', encoding="utf8") as f:
+        f.write('INSERT INTO "room_availability" ("room_id","date") VALUES\n')
+
     with open("scraper.csv", 'r', encoding="utf8", newline='') as f:
         csvreader = csv.reader(f, delimiter=';')
         header = next(csvreader)
@@ -97,37 +110,27 @@ def insert():
             arrival_destination = row[3]
             room_types = row[4].split(',')
             board_types = row[5].split(',')
-            transport_types = []
+            own_transport = False
             if "Dojazd własny" in departure_destinations:
-                transport_types.append("own")
+                own_transport = True
                 departure_destinations.remove("Dojazd własny")
+
+            tour(hotel_name, arrival_destination, board_types, own_transport)
+
             if len(departure_destinations):
-                transport_types.append("plane")
+                flight(departure_destinations, arrival_destination, 50)
 
-            tour(id, hotel_name, arrival_destination, board_types, transport_types, departure_destinations)
-            if "plane" in transport_types:
-                flight(id, departure_destinations, arrival_destination, 50)
-            room(id, hotel_name, room_types, 50)
+            room(hotel_name, room_types, 50)
 
 
-def tour(id, hotel_name, region, board_types, transport_types, departure_destinations):
+def tour(hotel_name, region, board_types, own_transport):
     with open("SQL_scripts/tour.sql", mode='a', encoding="utf8") as f:
-        if id == 0:
-            f.write(
-                'INSERT INTO "tour" ("hotel_name", "region", "board_types", "transport_types", "departure_destinations") VALUES\n')
-
-        transport_types = ",".join(transport_types)
         board_types = ",".join(board_types)
-        departure_destinations = ",".join(departure_destinations)
-        f.write("('{}', '{}', '{}', '{}', '{}'),\n".format(hotel_name, region, board_types, transport_types,
-                                                           departure_destinations))
+        f.write("('{}', '{}', '{}', '{}'),\n".format(hotel_name, region, own_transport, board_types))
 
 
-def flight(tour_id, departure_destinations, arrival_destination, size):
+def flight(departure_destinations, arrival_destination, size):
     with open("SQL_scripts/flight.sql", mode='a', encoding="utf8") as f:
-        if tour_id == 0:
-            f.write(
-                'INSERT INTO "flight" ("flight_date", "departure_destination", "arrival_destination", "number_of_seats") VALUES\n')
         for i in range(0, size):
             number_of_seats = random.randint(5, 30)
             flight_date = randdate()
@@ -140,17 +143,25 @@ def flight(tour_id, departure_destinations, arrival_destination, size):
                                                        number_of_seats))
 
 
-def room(tour_id, hotel_name, room_types, size):
+def room(hotel_name, room_types, size):
     with open("SQL_scripts/room.sql", mode='a', encoding="utf8") as f:
-        if tour_id == 0:
-            f.write(
-                'INSERT INTO "room" ("hotel_name", "room_type", "room_date", "number_of_rooms") VALUES\n')
         for i in range(0, size):
-            number_of_rooms = random.randint(1, 5)
-            room_date = randdate()
             index = random.randint(0, len(room_types) - 1)
             room_type = room_types[index]
-            f.write("('{}', '{}', '{}', {}),\n".format(hotel_name, room_type, room_date, number_of_rooms))
+            f.write("('{}', '{}'),\n".format(hotel_name, room_type))
+            room_availability(100)
+            global room_id
+            room_id += 1
+
+
+def room_availability(size):
+    with open("SQL_scripts/room_availability.sql", mode='a', encoding="utf8") as f:
+        for i in range(0, size):
+            date = randdate()
+            f.write("('{}', '{}'),\n".format(room_id, date))
+
+
+room_id = 1
 
 
 def main():

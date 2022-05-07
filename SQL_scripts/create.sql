@@ -1,30 +1,37 @@
-DROP TABLE IF EXISTS "tour";
-CREATE TABLE Tour (
-    id SERIAL NOT NULL,
-    hotel_name varchar(255),
-    region varchar(255),
-    board_types varchar(255),
-    transport_types varchar(255),
-    departure_destinations varchar(255),
-    PRIMARY KEY (id)
+DROP TABLE IF EXISTS tour;
+DROP TABLE IF EXISTS flight;
+DROP TABLE IF EXISTS room_availability;
+DROP TABLE IF EXISTS room;
+
+CREATE TABLE tour (
+    tour_id SERIAL NOT NULL,
+    hotel_name VARCHAR(255),
+    region VARCHAR(255),
+    own_transport BOOLEAN,
+    board_types VARCHAR(255),
+    PRIMARY KEY (tour_id)
 );
 
-DROP TABLE IF EXISTS "flight";
-CREATE TABLE Flight (
-    id SERIAL NOT NULL,
-    flight_date date,
-    departure_destination varchar(255),
-    arrival_destination varchar(255),
-    number_of_seats int,
-    PRIMARY KEY (id)
+CREATE TABLE flight (
+    flight_id SERIAL NOT NULL,
+    flight_date DATE,
+    departure_destination VARCHAR(255),
+    arrival_destination VARCHAR(255),
+    number_of_seats INT,
+    PRIMARY KEY (flight_id)
 );
 
-DROP TABLE IF EXISTS "room";
-CREATE TABLE Room (
-    id SERIAL NOT NULL,
-    hotel_name varchar(255),
-    room_type varchar(255),
-    room_date date,
-    number_of_rooms int,
-    PRIMARY KEY (id)
+CREATE TABLE room (
+    room_id SERIAL NOT NULL,
+    hotel_name VARCHAR(255),
+    room_type VARCHAR(255),
+    PRIMARY KEY (room_id)
 );
+
+CREATE TABLE room_availability (
+    room_availability_id SERIAL NOT NULL,
+    room_id INT REFERENCES room(room_id),
+    date DATE,
+    PRIMARY KEY (room_availability_id)
+);
+
